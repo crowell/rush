@@ -9,6 +9,7 @@ opts = Trollop::options do
   opt :raw, "save raw shellcode", :default => false
   opt :elf, "run elf of shellcode", :default => false
   opt :compiler, "compiler for compiling shellcode", :default => "gcc"
+  opt :bits, "number of bits (64/32)", :default=>32
 end
 
 # first thing is going to be compile to an elf
@@ -18,7 +19,15 @@ if ARGV.size < 1
   abort
 end
 
-assemble = "#{opts[:nasm]} -f elf #{asm} -o #{opts[:output] + '.o'}"
+elf = "elf"
+compiler = opts[:compiler]
+if opts[:bits] == 64
+  elf = "elf64"
+end
+if opts[:bits] == 32
+  compiler = compiler + " -m32"
+end
+assemble = "#{opts[:nasm]} -f #{elf} #{asm} -o #{opts[:output] + '.o'}"
 `#{assemble}`
 
 # now extract it
@@ -45,6 +54,6 @@ if opts[:raw] == true
 end
 
 if opts[:elf] == true
-  compile = "#{opts[:compiler]} -o #{opts[:output]} #{opts[:output]}.o -nostartfiles -nostdlib -nodefaultlibs"
+  compile = "#{compiler} -o #{opts[:output]} #{opts[:output]}.o -nostartfiles -nostdlib -nodefaultlibs"
   `#{compile}`
 end
